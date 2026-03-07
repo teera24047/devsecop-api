@@ -12,17 +12,16 @@ spec:
       labels:
         app: my-api
     spec:
+      # --- บอกให้ Kubernetes ใช้กุญแจที่เราสร้าง ---
+      imagePullSecrets:
+      - name: acr-secret
+      # ---------------------------------------
       containers:
       - name: my-api
-        # แก้ไขชื่อ Image ให้ตรงกับ ACR ของคุณแล้ว
         image: teeraregistry77.azurecr.io/my-secure-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
-        env:
-        # ใส่ Environment Variables เพื่อความยืดหยุ่น (Optional)
-        - name: PORT
-          value: "80"
 ---
 apiVersion: v1
 kind: Service

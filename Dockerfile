@@ -3,7 +3,5 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-# เปิด Port 80
-EXPOSE 80 
-# สั่งรันไฟล์ app.py
+EXPOSE 80
 CMD ["python", "app.py"]

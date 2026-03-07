@@ -1,55 +1,69 @@
+import sqlite3
+import os
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-import sqlite3
+from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
 # ---------------------------------------------------------
-# ส่วนที่ 1: สร้าง Database และข้อมูลจำลองโดยอัตโนมัติ
+# 1. ระบบฐานข้อมูล SQL (สร้างและล้างข้อมูลอัตโนมัติ)
 # ---------------------------------------------------------
 def init_db():
-    conn = sqlite3.connect('secure_shop.db')
-    c = conn.cursor()
-    # สร้างตารางสินค้า
-    c.execute('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, name TEXT, price INTEGER, image TEXT)')
-    c.execute('DELETE FROM products') # ล้างข้อมูลเก่าทุกครั้งที่เริ่มระบบใหม่
-    
-    # ข้อมูลสินค้าสไตล์ DevSecOps
-    products = [
-        (1, "DevSecOps Shield v2", 1500, "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=500"),
-        (2, "Cyber Armor Jacket", 3200, "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500"),
-        (3, "Hardware Security Key", 850, "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=500")
+    conn = sqlite3.connect("devsecops.db")
+    cursor = conn.cursor()
+    # สร้างตาราง SQL
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            image_url TEXT NOT NULL
+        )
+    """)
+    # ล้างข้อมูลเก่าและใส่ข้อมูลใหม่ทุกครั้งที่แอปเริ่มทำงาน
+    cursor.execute("DELETE FROM products")
+    sample_data = [
+        (1, "Cyber Armor Jacket", 2500.0, "https://images.unsplash.com/photo-1551434678-e076c223a692?w=500"),
+        (2, "DevSecOps Helmet", 1200.0, "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500"),
+        (3, "Security Key V2", 800.0, "https://images.unsplash.com/photo-1633265486064-086b219458ec?w=500")
     ]
-    c.executemany('INSERT INTO products VALUES (?,?,?,?)', products)
+    cursor.executemany("INSERT INTO products VALUES (?, ?, ?, ?)", sample_data)
     conn.commit()
     conn.close()
 
-init_db() # สั่งทำงานตอนเปิดแอป
+init_db()
+
+class Product(BaseModel):
+    id: int
+    name: str
+    price: float
+    image_url: str
 
 # ---------------------------------------------------------
-# ส่วนที่ 2: เส้นทางสำหรับส่งหน้าเว็บ (Frontend)
+# 2. เส้นทางสำหรับหน้าเว็บ (Frontend)
 # ---------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-def read_root():
-    # เมื่อมีคนเข้าเว็บหน้าแรก ให้โหลดไฟล์ index.html ไปแสดง
-    with open("index.html", "r", encoding="utf-8") as f:
-        return f.read()
+def serve_frontend():
+    if os.path.exists("index.html"):
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>System Error: index.html not found!</h1>"
 
 # ---------------------------------------------------------
-# ส่วนที่ 3: เส้นทางสำหรับดึงข้อมูลสินค้า (API)
+# 3. เส้นทางสำหรับ API (Backend)
 # ---------------------------------------------------------
-@app.get("/api/products")
+@app.get("/api/products", response_model=List[Product])
 def get_products():
-    conn = sqlite3.connect('secure_shop.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM products')
-    rows = c.fetchall()
+    conn = sqlite3.connect("devsecops.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, price, image_url FROM products")
+    rows = cursor.fetchall()
     conn.close()
-    
-    # แปลงข้อมูลจาก Database เป็น JSON
-    return [{"id": r[0], "name": r[1], "price": r[2], "image": r[3]} for r in rows]
+    return [{"id": r[0], "name": r[1], "price": r[2], "image_url": r[3]} for r in rows]
 
 if __name__ == "__main__":
     import uvicorn
-    # บังคับรันที่ Port 80 ชัวร์ๆ แก้ปัญหา 502
+    # บังคับรัน Port 80 เพื่อให้ตรงกับ Ingress 100%
     uvicorn.run(app, host="0.0.0.0", port=80)

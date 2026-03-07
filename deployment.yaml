@@ -15,7 +15,7 @@ spec:
       containers:
       - name: my-api
         # แก้ไขชื่อ Image ให้ตรงกับ ACR ของคุณแล้ว
-        image: teeraregistry77.azurecr.io/my-api:latest
+        image: teeraregistry77.azurecr.io/my-secure-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80

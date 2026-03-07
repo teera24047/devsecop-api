@@ -1,0 +1,40 @@
+﻿name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Security Scan (SAST)
+      run: |
+        pip install bandit
+        bandit -r app.py
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Build and Push to ACR
+      run: |
+        az acr login --name teeraregistry77
+        docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/my-secure-api:${{ github.sha }} .
+        docker push ${{ secrets.ACR_LOGIN_SERVER }}/my-secure-api:${{ github.sha }}
+
+    - name: Set AKS Context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: MyDevSecOpsRG
+        cluster-name: MyDevSecOpsCluster
+
+    - name: Deploy to Kubernetes
+      run: |
+        # อปเดต Image ในไฟล Deployment อตโนมต
+        sed -i "s|image:.*|image: ${{ secrets.ACR_LOGIN_SERVER }}/my-secure-api:${{ github.sha }}|g" deployment.yaml
+        kubectl apply -f deployment.yaml

@@ -11,7 +11,7 @@ app = FastAPI()
 server = 'teera-sql-server.database.windows.net'
 database = 'inventory'
 username = 'teeraadmin'
-password = 'Teera!@24047'
+password = 'Teera!@#24047'
 driver= '{ODBC Driver 17 for SQL Server}'
 
 conn_str = f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}'

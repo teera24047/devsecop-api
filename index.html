@@ -2,51 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DevSecOps Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSecOps Armory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
-                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80');
+            background: linear-gradient(to bottom, rgba(10, 10, 15, 0.9), rgba(5, 5, 10, 0.95)), 
+                        url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=2070');
             background-size: cover;
             background-attachment: fixed;
             color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
         }
-        .product-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+        .neon-border {
             border: 1px solid rgba(0, 255, 204, 0.3);
-            transition: 0.3s;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.1);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
         }
-        .product-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        .neon-border:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
         }
     </style>
 </head>
-<body class="p-10">
-    <h1 class="text-4xl font-bold text-center mb-10 tracking-widest uppercase">DevSecOps Inventory</h1>
-    
-    <div id="product-list" class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        </div>
+<body class="min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-16 mt-8">
+            <h1 class="text-5xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                DEVSECOPS ARMORY
+            </h1>
+            <p class="mt-4 text-emerald-500/70 uppercase tracking-widest">Secure Your Infrastructure. Gear Up.</p>
+        </header>
+        
+        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            </div>
+    </div>
 
     <script>
-        async function fetchProducts() {
-            // ดึงข้อมูลจาก API ที่เราทำใน Step 2/4 (ใช้ IP Ingress ของคุณ)
-            const response = await fetch('/api/products'); 
-            const products = await response.json();
-            const list = document.getElementById('product-list');
-            
-            list.innerHTML = products.map(p => `
-                <div class="product-card p-5 rounded-xl text-white">
-                    <img src="${p.image_url}" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h2 class="text-xl font-semibold">${p.name}</h2>
-                    <p class="text-emerald-400 font-bold mt-2">${p.price} THB</p>
-                    <button class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 p-2 rounded text-black font-bold">Buy Now</button>
-                </div>
-            `).join('');
+        async function fetchArmory() {
+            try {
+                // ยิงไปขอข้อมูลจาก Backend API
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                const grid = document.getElementById('product-grid');
+                
+                grid.innerHTML = products.map(p => `
+                    <div class="neon-border rounded-xl p-5 flex flex-col items-center">
+                        <img src="${p.image}" class="w-full h-56 object-cover rounded-lg border border-emerald-900 mb-5 opacity-90 hover:opacity-100">
+                        <h2 class="text-xl font-bold mb-2 text-white text-center">${p.name}</h2>
+                        <p class="text-2xl font-black text-emerald-400 mb-6">${p.price.toLocaleString()} THB</p>
+                        <button class="w-full py-3 bg-emerald-500/20 border border-emerald-500 hover:bg-emerald-500 hover:text-black font-bold tracking-wider rounded transition-colors uppercase">
+                            Acquire Gear
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error("System Failure: Unable to load armory data.", error);
+            }
         }
-        fetchProducts();
+        fetchArmory();
     </script>
 </body>
 </html>

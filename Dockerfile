@@ -1,12 +1,9 @@
 FROM python:3.9-slim
-
 WORKDIR /app
-
-# ติดตั้ง FastAPI และ Uvicorn
-RUN pip install fastapi uvicorn
-
-# ก๊อปปี้ไฟล์ทั้งหมดเข้า Container
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-
-# สั่งรัน API
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]
+# เปิด Port 80
+EXPOSE 80 
+# สั่งรันไฟล์ app.py
+CMD ["python", "app.py"]

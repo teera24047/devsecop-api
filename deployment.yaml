@@ -12,16 +12,47 @@ spec:
       labels:
         app: my-api
     spec:
-      # --- จุดสำคัญ: ต้องอยู่ตรงนี้ ---
+      # กุญแจสำคัญ: ระบุชื่อ Secret ให้ตรงกับที่สร้างในข้อ 2
       imagePullSecrets:
       - name: acr-secret
-      # ---------------------------
       containers:
       - name: my-api
-        image: teeraregistry77.azurecr.io/my-secure-api:latest  # << เช็ค Tag จากข้อ 1
+        # ตรวจสอบชื่อและ Tag (ถ้าข้อ 1 ไม่ใช่ latest ให้แก้ตรงนี้)
+        image: teeraregistry77.azurecr.io/my-secure-api:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
         env:
         - name: PORT
           value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-api-service
+spec:
+  type: ClusterIP
+  selector:
+    app: my-api
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-api-service
+            port:
+              number: 80

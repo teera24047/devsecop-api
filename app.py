@@ -1,20 +1,22 @@
 from fastapi import FastAPI
-import os
+from pydantic import BaseModel
+from typing import List
 
 app = FastAPI()
 
-# จำลองการดึงค่าจาก Environment Variable (ซึ่งสำคัญมากในเรื่อง Security)
-ENV_NAME = os.getenv("ENVIRONMENT", "Local")
+class Product(BaseModel):
+    id: int
+    name: str
+    price: float
+    image_url: str
 
-@app.get("/")
-def read_root():
-    return {
-        "message": "Hello DevSecOps!",
-        "environment": ENV_NAME,
-        "status": "Healthy"
-    }
+# จำลองข้อมูลสินค้า (ในของจริงจะดึงจาก SQL ที่เราสร้างด้านบน)
+db_products = [
+    {"id": 1, "name": "Cyber Armor Jacket", "price": 2500, "image_url": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=500"},
+    {"id": 2, "name": "DevSecOps Helmet", "price": 1200, "image_url": "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500"},
+    {"id": 3, "name": "Security Key V2", "price": 800, "image_url": "https://images.unsplash.com/photo-1633265486064-086b219458ec?w=500"}
+]
 
-@app.get("/health")
-def health_check():
-    # ไว้ให้ Kubernetes คอยเช็คว่าระบบเรายังรอดอยู่ไหม (Liveness Probe)
-    return {"status": "ok"}
+@app.get("/api/products", response_model=List[Product])
+def get_products():
+    return db_products

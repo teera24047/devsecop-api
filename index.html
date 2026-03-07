@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DevSecOps Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), 
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #00ffcc;
+        }
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            transition: 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+        }
+    </style>
+</head>
+<body class="p-10">
+    <h1 class="text-4xl font-bold text-center mb-10 tracking-widest uppercase">DevSecOps Inventory</h1>
+    
+    <div id="product-list" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        </div>
+
+    <script>
+        async function fetchProducts() {
+            // ดึงข้อมูลจาก API ที่เราทำใน Step 2/4 (ใช้ IP Ingress ของคุณ)
+            const response = await fetch('/api/products'); 
+            const products = await response.json();
+            const list = document.getElementById('product-list');
+            
+            list.innerHTML = products.map(p => `
+                <div class="product-card p-5 rounded-xl text-white">
+                    <img src="${p.image_url}" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h2 class="text-xl font-semibold">${p.name}</h2>
+                    <p class="text-emerald-400 font-bold mt-2">${p.price} THB</p>
+                    <button class="mt-4 w-full bg-emerald-600 hover:bg-emerald-500 p-2 rounded text-black font-bold">Buy Now</button>
+                </div>
+            `).join('');
+        }
+        fetchProducts();
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevSecOps Store</title>
+    <title>DevSecOps Azure Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -20,29 +20,46 @@
 </head>
 <body class="p-8">
     <div class="max-w-5xl mx-auto">
-        <h1 class="text-4xl font-bold text-center mb-10 text-white tracking-widest uppercase">DevSecOps Equipment</h1>
-        <div id="product-list" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+        <h1 class="text-4xl font-bold text-center mb-10 text-white tracking-widest uppercase italic">
+            Azure SQL Inventory
+        </h1>
+        
+        <div id="product-list" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <p class="text-center col-span-3">Accessing Azure SQL Database...</p>
+        </div>
     </div>
 
     <script>
         async function loadProducts() {
             try {
+                // 1. เช็คตรงนี้: ต้องยิงไปที่ /api/products ตามที่เราตั้งใน app.py
                 const response = await fetch('/api/products');
                 const products = await response.json();
+                
                 const container = document.getElementById('product-list');
                 
+                if (products.error) {
+                    container.innerHTML = `<p class="text-red-500 col-span-3">Error: ${products.error}</p>`;
+                    return;
+                }
+
                 container.innerHTML = products.map(p => `
                     <div class="card p-5 rounded-xl hover:scale-105 transition duration-300">
-                        <img src="${p.image_url}" class="w-full h-48 object-cover rounded-lg mb-4">
+                        <img src="${p.image_url}" class="w-full h-48 object-cover rounded-lg mb-4 border border-sky-900">
                         <h2 class="text-xl font-bold text-white">${p.name}</h2>
                         <p class="text-2xl font-bold mt-2 text-sky-400">${p.price.toLocaleString()} THB</p>
-                        <button class="w-full mt-4 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded uppercase tracking-wider">Purchase</button>
+                        <button class="w-full mt-4 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded uppercase tracking-wider">
+                            Order Now
+                        </button>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error("Failed to load data", err);
+                document.getElementById('product-list').innerHTML = "System Offline";
             }
         }
+        
+        // สั่งให้ทำงานทันทีที่เปิดหน้าเว็บ
         loadProducts();
     </script>
 </body>

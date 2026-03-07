@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: my-api-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: my-api
@@ -14,20 +14,37 @@ spec:
     spec:
       containers:
       - name: my-api
-        # ตรงนี้ใช้ชื่อ ACR ของคุ
-        image: teeraregistry77.azurecr.io/my-secure-api:latest 
+        image: <ชื่อACRของคุณ>.azurecr.io/my-api:latest 
         ports:
-        - containerPort: 8000
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: my-api-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: my-api
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8000
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-api-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-api-service
+            port:
+              number: 80

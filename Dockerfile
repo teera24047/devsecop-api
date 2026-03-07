@@ -1,7 +1,12 @@
-FROM python:3.11-slim
+FROM python:3.9-slim
+
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# ติดตั้ง FastAPI และ Uvicorn
+RUN pip install fastapi uvicorn
+
+# ก๊อปปี้ไฟล์ทั้งหมดเข้า Container
 COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# สั่งรัน API
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]

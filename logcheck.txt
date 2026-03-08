@@ -1,0 +1,166 @@
+Install powershell azure
+winget install -e --id Microsoft.AzureCLI
+หรือ
+az aks install-cli
+หรือ
+Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.msi
+เช็ค az --version
+docker --version
+
+mkdir devsecops-api
+cd devsecops-api
+
+ni ชื่อไฟล์ -Force //new file
+เมื่อสร้างเสร็จ
+
+build docker
+docker build -t my-secure-api:v1 .  \\ชื่อโปรเจค: version .
+docker run -d -p 8000:8000 --name my-api my-secure-api:v1
+ทดสอบ 
+Invoke-RestMethod -Uri http://localhost:8000
+ขึ้น git
+git init //ประกาศ git project ต้องมี git destop หรือ ผูก git ไว้อยู่แล้ว
+# 2. สร้างไฟล์ .gitignore (สำคัญมาก: เพื่อไม่ให้ไฟล์ขยะหรือไฟล์รหัสผ่านหลุดขึ้น GitHub)
+"__pycache__/`n.env`n.venv" | Out-File -FilePath .gitignore -Encoding utf8
+git add .
+git commit -m "name project"
+
+# เปลี่ยนชื่อ Branch หลักเป็น main
+git branch -M main
+
+# เชื่อมกับ GitHub (แทนที่ URL ด้วยของคุณ)
+git remote add origin https://github.com/YourName/devsecops-api.git
+
+# ส่งโค้ดขึ้นไป!
+git push -u origin main
+
+จำลองการสร้าง ใช้งานบน python
+pip install bandit
+test
+bandit -r app.py
+
+สร้าง k8n azure
+# สร้าง Resource Group อีกครั้ง (ถ้าคำสั่งเดิมยังไม่สำเร็จ)
+az group create --name MyDevSecOpsRG --location southeastasia
+
+# สร้าง AKS Cluster (เปลี่ยนชื่อ ACR ให้ตรงกับของคุณ)
+az aks create --resource-group MyDevSecOpsRG --name MyDevSecOpsCluster --node-count 1 --generate-ssh-keys --attach-acr teeraregistry77
+# เปิดบริการ Kubernetes
+az provider register --namespace Microsoft.ContainerService
+
+# เปิดบริการ Network (สำหรับโหลดบาลานซ์)
+az provider register --namespace Microsoft.ContainerNetwork
+
+# เปิดบริการ Compute (สำหรับสร้าง VM)
+az provider register --namespace Microsoft.Compute
+az provider show -n Microsoft.ContainerService --query registrationState
+
+az aks create `
+    --resource-group MyDevSecOpsRG `
+    --name MyDevSecOpsCluster `
+    --node-count 1 `
+    --generate-ssh-keys `
+    --attach-acr teeraregistry77
+
+# ตัวที่ถูกต้องคือ Microsoft.Network ครับ
+az provider register --namespace Microsoft.Network
+
+# ตรวจสอบสถานะตัวหลัก (ตัวนี้สำคัญที่สุดสำหรับ AKS)
+az provider show -n Microsoft.ContainerService --query registrationState
+
+# 1. สั่ง Register บริการ Container Registry
+az provider register --namespace Microsoft.ContainerRegistry
+
+# 2. ตรวจสอบสถานะ (รอจนกว่าจะขึ้น Registered)
+az provider show -n Microsoft.ContainerRegistry --query registrationState
+
+az acr create --resource-group MyDevSecOpsRG --name teeraregistry77 --sku Basic
+
+install AKS
+az aks create `
+    --resource-group MyDevSecOpsRG `
+    --name MyDevSecOpsCluster `
+    --node-count 1 `
+    --generate-ssh-keys `
+    --attach-acr teeraregistry77
+
+เชื่อม AKS on ACR 
+az aks update --name MyDevSecOpsCluster --resource-group MyDevSecOpsRG --attach-acr teeraregistry77
+
+key check
+az aks get-credentials --resource-group MyDevSecOpsRG --name MyDevSecOpsCluster
+
+Merged "MyDevSecOpsCluster" as current context in C:\Users\Teera\.kube\config
+
+# 1. Login เข้าคลัง
+az acr login --name teeraregistry77
+
+# 2. แปะป้ายชื่อคลังให้ Image (เปลี่ยนชื่อตาม LoginServer ของคุณ)
+docker tag my-secure-api:v1 teeraregistry77.azurecr.io/my-secure-api:v1
+
+# 3. ผลัก (Push) ขึ้น Cloud
+docker push teeraregistry77.azurecr.io/my-secure-api:v1
+
+สร้าง azure on git
+ในเมนูซ้ายมือ ให้มองหาหัวข้อ "Security" (ปกติจะอยู่ล่างๆ หน่อย)
+คลิกที่เมนูย่อยชื่อ "Secrets and variables" (มันจะเป็นเมนูแบบ Dropdown)
+พอกดแล้วจะมีเมนูโผล่มาข้างล่าง ให้เลือกคลิกที่คำว่า "Actions" ครับ
+new repository secret
+
+do key
+az account list --output table
+
+copy key on
+az ad sp create-for-rbac --name "github-actions-sp" --role contributor --scopes /subscriptions/รหัสที่ก๊อปมา --sdk-auth
+เมื่อได้ นำโค๊ดที่ได้ไปใส่:
+
+เช็คสถานะ
+kubectl get service my-api-service
+
+# เปิดใช้งาน Add-on สำหรับ Monitoring บน Cluster ของเรา
+az aks enable-addons --addons monitoring --name MyDevSecOpsCluster --resource-group MyDevSecOpsRG
+
+1. สั่ง Register บริการ Monitoring
+az provider register --namespace microsoft.insights
+
+# 2. ตรวจสอบสถานะ (รอจนกว่าจะขึ้น Registered)
+az provider show -n microsoft.insights --query registrationState
+
+ติดตั้ง nginx azure
+az aks get-credentials --resource-group MyDevSecOpsRG --name MyDevSecOpsCluster
+
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm install quickstart ingress-nginx/ingress-nginx \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
+
+install database
+# สร้าง SQL Server (เปลี่ยน [password] เป็นรหัสของคุณ)
+az sql server create --name teera-sql-server --resource-group MyDevSecOpsRG --location southeastasia --admin-user teeraadmin --admin-password [YourPassword123!]
+# เปิด Firewall ให้บริการใน Azure เข้าถึงได้
+az sql server firewall-rule create --resource-group MyDevSecOpsRG --server teera-sql-server --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
+# สร้างฐานข้อมูลชื่อ inventory
+az sql db create --resource-group MyDevSecOpsRG --server teera-sql-server --name inventory --service-objective S0
+
+# 1. สั่ง Update คอนฟิกใหม่
+kubectl apply -f deployment.yaml
+
+# 2. สั่ง Restart Pod เพื่อให้ดึงของใหม่มาใช้ทันที
+kubectl rollout restart deployment my-api-deployment
+
+# 3. เช็คสถานะ (รอจนกว่าจะขึ้น 1/1 Running)
+kubectl get pods -w
+
+# ดูว่า Ingress เชื่อมต่อกับ IP ถูกต้องไหม
+kubectl get ingress
+
+# ดูว่า Service (ประตูภายใน) ทำงานปกติไหม
+kubectl get svc my-api-service
+
+PowerShell
+kubectl get events --sort-by='.lastTimestamp'
+
+check log run
+check name: kubectl get pods
+ checklog: kubectl logs my-api-deployment-7d576f56d-g2t9l

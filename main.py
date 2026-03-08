@@ -108,17 +108,19 @@ async def read_root():
 # --- 4. API Endpoints (Backend) ---
 
 @app.get("/api/products")
+# ตัวอย่างการแก้ในฟังก์ชัน list_products หรือ add_product
 def list_products():
+    conn = None # กำหนดค่าเริ่มต้นไว้ก่อน
     try:
-        conn = get_db_connection()
+        conn = pyodbc.connect(conn_str)
         cursor = conn.cursor()
-        cursor.execute("SELECT name, price FROM Products") # ตรวจสอบชื่อ Table ใน SQL ของคุณด้วย
-        rows = cursor.fetchall()
-        return [{"name": row.name, "price": row.price} for row in rows]
+        # ... รัน SQL ...
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error connecting to DB: {e}") # ดู Error จริงได้จาก kubectl logs
+        return {"error": str(e)}
     finally:
-        conn.close()
+        if conn: # เช็คก่อนว่ามี conn จริงไหมค่อยสั่งปิด
+            conn.close()
 
 @app.post("/api/products")
 def create_product(product: Product):

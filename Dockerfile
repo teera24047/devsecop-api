@@ -1,20 +1,18 @@
 FROM python:3.9-slim
 
-# 1. ติดตั้ง dependencies พื้นฐานที่จำเป็นสำหรับระบบ (เพิ่มปุ่มกดและตัวอ่าน repository)
+# 1. ติดตั้งเครื่องมือที่จำเป็น (ใช้กุญแจแบบ gpg แทน apt-key)
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg2 \
     g++ \
     unixodbc-dev \
-    apt-transport-https \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. เพิ่ม Microsoft Key และ Repository สำหรับ SQL Driver
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
+# 2. เพิ่ม Microsoft Repo ด้วยวิธีใหม่ (ไม่ใช้ apt-key)
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
-# 3. อัปเดตและติดตั้ง SQL Driver (msodbcsql18)
+# 3. ติดตั้ง SQL Driver
 RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
 
 WORKDIR /app
@@ -23,8 +21,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. ก๊อปปี้โค้ดทั้งหมด
+# 5. ก๊อปปี้โค้ด
 COPY . .
 
-# 6. สั่งรันแอป (เช็คว่าไฟล์ชื่อ main.py หรือ app.py ถ้าชื่อ app.py ให้แก้บรรทัดล่างเป็น app:app)
+# 6. สั่งรัน (ถ้าไฟล์ชื่อ app.py ให้แก้เป็น app:app นะครับ)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

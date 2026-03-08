@@ -18,7 +18,7 @@ spec:
       containers:
       - name: my-api
         # 2. ใช้ชื่อ Image และรหัส Tag SHA ที่เราเจอใน ACR ล่าสุด
-        image: teeraregistry77.azurecr.io/my-secure-api:5ac264658263f1db2c0d5c06d5b818ce7ab367cb
+        image: teeraregistry77.azurecr.io/my-secure-api:c52a1afd204e3ae4ccf24806199d69eba7969bba
 
         imagePullPolicy: Always
         ports:

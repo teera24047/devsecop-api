@@ -8,13 +8,16 @@ app = FastAPI()
 
 # --- 1. การเชื่อมต่อฐานข้อมูล Azure SQL ---
 def get_db_connection():
-    # ดึงค่าจาก Environment Variables หรือใส่ตรงๆ (เพื่อทดสอบ)
     conn_str = (
         "Driver={ODBC Driver 18 for SQL Server};"
-        "Server=tcp:your-server.database.windows.net,1433;" # แก้เป็น Server ของคุณ
-        "Database=your-db-name;"                            # แก้เป็นชื่อ DB ของคุณ
-        "Uid=your-username;"                                # แก้เป็น Username
-        "Pwd=your-password;"                                # แก้เป็น Password
+        # 1. Server ต้องตรงกับที่เห็นใน Azure (teera-sql-server)
+        "Server=tcp:teera-sql-server.database.windows.net,1433;" 
+        # 2. Database Name (ต้องระบุชื่อ DB ที่คุณสร้างไว้ เช่น my-db)
+        "Database=teera-db;" 
+        # 3. Username (ตัดคำว่า your- ออก)
+        "Uid=teeraadmin;" 
+        # 4. Password (ตัดคำว่า your- ออก)
+        "Pwd=Teera!@#24047;" 
         "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
     )
     return pyodbc.connect(conn_str)

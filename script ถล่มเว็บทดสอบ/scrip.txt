@@ -1,0 +1,12 @@
+# สคริปต์จำลองการยิง Request รัวๆ ถล่ม API ของเรา
+Write-Host "🚀 เริ่มทำการยิงโหลด (กด Ctrl+C เพื่อหยุดการทำงาน)..." -ForegroundColor Yellow
+
+while($true) {
+    try {
+        # เปลี่ยน IP ตรงนี้ให้ตรงกับหน้าเว็บของคุณบอน (จากที่ใช้ก่อนหน้าคือ 172.188.164.225)
+        Invoke-WebRequest -Uri "http://172.188.164.225/api/products" -UseBasicParsing | Out-Null
+        Write-Host "💥 ยิง Request สำเร็จ!" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ เว็บเริ่มรับไม่ไหวแล้ว: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}

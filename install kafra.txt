@@ -1,0 +1,29 @@
+สรุป 4 ขั้นตอน: การติดตั้ง Prometheus & Grafana บน K8s
+คอนเซปต์: เราใช้เครื่องมือที่ชื่อว่า Helm (ตัวจัดการแพ็กเกจของ Kubernetes) เพื่อดาวน์โหลดและติดตั้งชุด kube-prometheus-stack ซึ่งมันจะมัดรวมทั้งตัวเก็บข้อมูล (Prometheus) และตัวทำหน้าจอกราฟ (Grafana) มาให้เสร็จสรรพในคำสั่งเดียวครับ
+
+ขั้นตอนที่ 1: เตรียมคลังแสง (Add Repository)
+บอกให้ Helm รู้จักแหล่งดาวน์โหลดโปรแกรมก่อน
+
+PowerShell
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+ขั้นตอนที่ 2: สั่งติดตั้ง (Install)
+สร้างห้องชื่อ monitoring แล้วยัดโปรแกรมทั้งหมดลงไป พร้อมกับตั้งรหัสผ่านให้ Grafana
+
+PowerShell
+helm install monitoring-system prometheus-community/kube-prometheus-stack `
+  --namespace monitoring `
+  --create-namespace `
+  --set grafana.adminPassword=admin1234
+
+ขั้นตอนที่ 3: ตรวจสอบความเรียบร้อย (Verify)
+เช็คดูว่าเครื่องจักรทุกตัวทำงานปกติไหม (ต้องขึ้นสถานะ Running)
+
+PowerShell
+kubectl get pods -n monitoring
+ขั้นตอนที่ 4: เปิดประตูเข้าดูหน้าจอ (Port-Forward)
+เจาะช่องทางเชื่อมต่อจาก AKS บนคลาวด์ มาที่เครื่องคอมพิวเตอร์ของเรา
+
+PowerShell
+kubectl port-forward svc/monitoring-system-grafana 3000:80 -n monitoring
+จากนั้นเปิด Browser ไปที่ http://localhost:3000 (User: admin, Password: admin1234) ก็จะเจอกราฟสวยๆ ทันทีครับ!

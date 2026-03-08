@@ -1,3 +1,5 @@
-﻿fastapi
+﻿@'
+fastapi
 uvicorn
 pyodbc
+'@ | Out-File -FilePath requirements.txt -Encoding utf8

@@ -6,23 +6,24 @@ import os
 
 app = FastAPI()
 
-# --- 1. การเชื่อมต่อฐานข้อมูล Azure SQL ---
+# --- 1. การตั้งค่าการเชื่อมต่อฐานข้อมูล (Global Variable) ---
+# ย้ายออกมาไว้ข้างนอกเพื่อให้ทุกฟังก์ชันเรียกใช้ได้ และแก้ปัญหา 'conn_str' is not defined
+conn_str = (
+    "Driver={ODBC Driver 18 for SQL Server};"
+    "Server=tcp:teera-sql-server.database.windows.net,1433;" 
+    "Database=MyDevSecOpsRG;" # อัปเดตตามที่คุณบอนยืนยัน
+    "Uid=teeraadmin;" 
+    "Pwd=Teera!@#24047;" # รหัสผ่านของคุณบอน
+    "Encrypt=yes;"
+    "TrustServerCertificate=yes;" # เปลี่ยนเป็น yes เพื่อให้รันบน Container ได้ราบรื่น
+    "Connection Timeout=30;"
+)
+
+# ฟังก์ชันกลางสำหรับเชื่อมต่อ DB
 def get_db_connection():
-    conn_str = (
-        "Driver={ODBC Driver 18 for SQL Server};"
-        # 1. Server ต้องตรงกับที่เห็นใน Azure (teera-sql-server)
-        "Server=tcp:teera-sql-server.database.windows.net,1433;" 
-        # 2. Database Name (ต้องระบุชื่อ DB ที่คุณสร้างไว้ เช่น my-db)
-        "Database=teera-db;" 
-        # 3. Username (ตัดคำว่า your- ออก)
-        "Uid=teeraadmin;" 
-        # 4. Password (ตัดคำว่า your- ออก)
-        "Pwd=Teera!@#24047;" 
-        "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
-    )
     return pyodbc.connect(conn_str)
 
-# --- 2. Data Model (โครงสร้างข้อมูลสินค้า) ---
+# --- 2. Data Model ---
 class Product(BaseModel):
     name: str
     price: float
@@ -46,7 +47,6 @@ async def read_root():
     <body>
         <div class="container">
             <h2 class="text-center mb-4">📦 ระบบจัดการสินค้า (Azure SQL)</h2>
-            
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <input type="text" id="p_name" class="form-control" placeholder="ชื่อสินค้า">
@@ -58,34 +58,33 @@ async def read_root():
                     <button onclick="saveProduct()" class="btn btn-save w-100">บันทึก</button>
                 </div>
             </div>
-
             <hr>
-
             <table class="table table-hover">
                 <thead class="table-dark">
                     <tr><th>สินค้า</th><th>ราคา (บาท)</th></tr>
                 </thead>
-                <tbody id="product-table">
-                    </tbody>
+                <tbody id="product-table"></tbody>
             </table>
         </div>
-
         <script>
-            // ดึงข้อมูลสินค้ามาแสดง
             async function fetchProducts() {
-                const response = await fetch('/api/products');
-                const products = await response.json();
-                const tableBody = document.getElementById('product-table');
-                tableBody.innerHTML = products.map(p => `
-                    <tr><td>${p.name}</td><td>${p.price.toLocaleString()}</td></tr>
-                `).join('');
+                try {
+                    const response = await fetch('/api/products');
+                    const products = await response.json();
+                    const tableBody = document.getElementById('product-table');
+                    if (products.error) {
+                        console.error(products.error);
+                        return;
+                    }
+                    tableBody.innerHTML = products.map(p => `
+                        <tr><td>${p.name}</td><td>${p.price.toLocaleString()}</td></tr>
+                    `).join('');
+                } catch (err) { console.error("Fetch error:", err); }
             }
 
-            // บันทึกข้อมูลสินค้าใหม่
             async function saveProduct() {
                 const name = document.getElementById('p_name').value;
                 const price = document.getElementById('p_price').value;
-
                 if(!name || !price) return alert('กรุณากรอกข้อมูลให้ครบ');
 
                 await fetch('/api/products', {
@@ -96,10 +95,9 @@ async def read_root():
 
                 document.getElementById('p_name').value = '';
                 document.getElementById('p_price').value = '';
-                fetchProducts(); // โหลดข้อมูลใหม่
+                fetchProducts();
             }
-
-            fetchProducts(); // รันตอนเปิดหน้าเว็บ
+            fetchProducts();
         </script>
     </body>
     </html>
@@ -108,29 +106,36 @@ async def read_root():
 # --- 4. API Endpoints (Backend) ---
 
 @app.get("/api/products")
-# ตัวอย่างการแก้ในฟังก์ชัน list_products หรือ add_product
 def list_products():
-    conn = None # กำหนดค่าเริ่มต้นไว้ก่อน
+    conn = None
     try:
-        conn = pyodbc.connect(conn_str)
+        conn = get_db_connection()
         cursor = conn.cursor()
-        # ... รัน SQL ...
+        # ดึงข้อมูลจากตาราง Products
+        cursor.execute("SELECT name, price FROM Products")
+        rows = cursor.fetchall()
+        products = [{"name": row[0], "price": float(row[1])} for row in rows]
+        return products
     except Exception as e:
-        print(f"Error connecting to DB: {e}") # ดู Error จริงได้จาก kubectl logs
+        print(f"Error connecting to DB: {e}")
         return {"error": str(e)}
     finally:
-        if conn: # เช็คก่อนว่ามี conn จริงไหมค่อยสั่งปิด
+        if conn:
             conn.close()
 
 @app.post("/api/products")
 def create_product(product: Product):
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # บันทึกข้อมูล (ตรวจสอบชื่อตาราง Products ใน DB ของคุณบอนด้วยนะครับ)
         cursor.execute("INSERT INTO Products (name, price) VALUES (?, ?)", (product.name, product.price))
         conn.commit()
         return {"status": "success"}
     except Exception as e:
+        print(f"Error creating product: {e}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        conn.close()
+        if conn:
+            conn.close()

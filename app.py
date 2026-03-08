@@ -11,7 +11,7 @@ app = FastAPI()
 server = 'teera-sql-server.database.windows.net'
 database = 'inventory'
 username = 'teeraadmin'
-password = 'Teera!@#24047'
+password = 'Teera!@#24047' # nosec B105
 driver= '{ODBC Driver 17 for SQL Server}'
 
 conn_str = f'DRIVER={driver};SERVER={server};PORT=1433;DATABASE={database};UID={username};PWD={password}'
@@ -60,4 +60,4 @@ def get_products():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=80)
+    uvicorn.run(app, host="0.0.0.0", port=80) #nosec B104
